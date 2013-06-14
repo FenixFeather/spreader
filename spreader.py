@@ -100,6 +100,8 @@ class Example(QtGui.QWidget):
         QtCore.QObject.connect(QtGui.qApp, QtCore.SIGNAL('wpmChanged'), self.changeWpm)
         QtCore.QObject.connect(QtGui.qApp, QtCore.SIGNAL('incrementChanged'), self.changeIncrement)
         QtCore.QObject.connect(QtGui.qApp, QtCore.SIGNAL('reverseChanged'), self.changeReverse)
+        QtCore.QObject.connect(QtGui.qApp, QtCore.SIGNAL('andDrillChanged'), self.changeAndDrill)
+        QtCore.QObject.connect(QtGui.qApp, QtCore.SIGNAL('andWordChanged'), self.changeAndWord)
         
     def initUI(self):
         
@@ -138,11 +140,13 @@ class Example(QtGui.QWidget):
         self.increment = 10
         self.wpm = 500
         self.reverse = False
+        self.andDrill = False
+        self.andWord = 'and'
         
     def settings(self):
         print('Settings')
         self.pause()
-        dlg = Settings(self,self.wpm,self.increment,self.reverse)
+        dlg = Settings(self,self.wpm,self.increment,self.reverse,self.andDrill,self.andWord)
         dlg.setModal(True)
         dlg.exec_()
         print('Set settings')
@@ -152,11 +156,10 @@ class Example(QtGui.QWidget):
             self.number = newNumber
         else:
             if self.playing:
-                self.number = -(self.textLength - 1 - newNumber)
+                self.number = -(self.textLength - 1 - newNumber)    #Force an IndexError
             
         if self.word.text != self.text[self.number]:
                 self.word.setText(self.text[self.number])
-        
         
     def play(self):
         if not self.playing:
@@ -186,8 +189,21 @@ class Example(QtGui.QWidget):
                 self.stop()
             
     def changeTime(self):
-        self.timer.singleShot(self.conversionfactor * len(self.newtext),self.changeword)
-#        print("Displaying {0} for {1} ms".format(self.newtext, self.conversionfactor * len(self.newtext)))
+#        if self.andDrill and (self.number % 2) == 0:
+        if self.andDrill:
+            self.timer.singleShot(self.conversionfactor * len(self.newtext) + 20,self.displayAnd)
+        else:
+            self.timer.singleShot(self.conversionfactor * len(self.newtext) + 20,self.changeword)
+    #        print("Displaying {0} for {1} ms".format(self.newtext, self.conversionfactor * len(self.newtext)))
+            if self.reverse:
+                self.number -= 1
+            else:
+                self.number += 1
+            
+    def displayAnd(self):
+        self.newtext = self.andWord
+        self.word.setText(self.newtext)
+        self.timer.singleShot(self.conversionfactor * len(self.newtext) * 2.5,self.changeword)
         if self.reverse:
             self.number -= 1
         else:
@@ -249,13 +265,24 @@ class Example(QtGui.QWidget):
             self.reverse = True
         else:
             self.reverse = False
+            
+    def changeAndDrill(self,checkstate):
+        if checkstate == 2:
+            self.andDrill = True
+        else:
+            self.andDrill = False
+            
+    def changeAndWord(self, word):
+        self.andWord = word
 
 class Settings(QtGui.QDialog):
-    def __init__(self,parent=None,wpm=500,increment=10,reverse=False):
+    def __init__(self,parent=None,wpm=500,increment=10,reverse=False,andDrill=False,andWord='and'):
         super(Settings, self).__init__()
         self.previousWpm = str(wpm)
         self.previousIncrement = str(increment)
         self.previousReverse = reverse
+        self.previousAndDrill = andDrill
+        self.previousAndWord = andWord
         self.initUI()
         
     def initUI(self):
@@ -289,6 +316,17 @@ class Settings(QtGui.QDialog):
         QtCore.QObject.connect(self.enableReverse, QtCore.SIGNAL('stateChanged(int)'), self.changeSetting)
         self.settingsDict[self.enableReverse] = 'reverse'
         
+        #Change and mode
+        self.enableAndDrill = QtGui.QCheckBox("Insert word")
+        if self.previousAndDrill:
+            self.enableAndDrill.setCheckState(2)
+        QtCore.QObject.connect(self.enableAndDrill, QtCore.SIGNAL('stateChanged(int)'), self.changeSetting)
+        self.settingsDict[self.enableAndDrill] = 'andDrill'
+        
+        self.andDrillEdit = QtGui.QLineEdit()
+        self.andDrillEdit.setText(self.previousAndWord)
+        QtCore.QObject.connect(self.andDrillEdit, QtCore.SIGNAL('textChanged(QString)'), self.changeSetting)
+        self.settingsDict[self.andDrillEdit] = 'andWord'
         
         #Close button
         self.closeButton = QtGui.QPushButton("Close")
@@ -300,7 +338,9 @@ class Settings(QtGui.QDialog):
         grid.addWidget(increment,1,0)
         grid.addWidget(self.incrementEdit,1,1)
         grid.addWidget(self.enableReverse,2,0)
-        grid.addWidget(self.closeButton, 3, 2)
+        grid.addWidget(self.enableAndDrill,3,0)
+        grid.addWidget(self.andDrillEdit, 3, 1)
+        grid.addWidget(self.closeButton, 4, 2)
         
         self.setLayout(grid) 
         
