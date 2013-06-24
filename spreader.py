@@ -171,7 +171,9 @@ class Example(QtGui.QWidget):
             self.paused = False
             self.playing = True
             self.textEdit.setReadOnly(True)
+            self.minimum = self.conversionfactor * 5
             self.changeword()
+            
 #        self.timer.start(self.conversionfactor * len(self.newtext)
         
     def changeword(self):
@@ -191,10 +193,12 @@ class Example(QtGui.QWidget):
     def changeTime(self):
 #        if self.andDrill and (self.number % 2) == 0:
         if self.andDrill:
-            self.timer.singleShot(self.conversionfactor * len(self.newtext) + 20,self.displayAnd)
+#            self.timer.singleShot(self.conversionfactor * len(self.newtext),self.displayAnd)
+            self.delay(self.conversionfactor,len(self.newtext),self.displayAnd, self.minimum)
         else:
-            self.timer.singleShot(self.conversionfactor * len(self.newtext) + 20,self.changeword)
-    #        print("Displaying {0} for {1} ms".format(self.newtext, self.conversionfactor * len(self.newtext)))
+            self.delay(self.conversionfactor,len(self.newtext),self.changeword, self.minimum)
+#            self.timer.singleShot(self.conversionfactor * len(self.newtext),self.changeword)
+#            print("Displaying {0} for {1} ms".format(self.newtext, self.conversionfactor * len(self.newtext)))
             if self.reverse:
                 self.number -= 1
             else:
@@ -203,11 +207,17 @@ class Example(QtGui.QWidget):
     def displayAnd(self):
         self.newtext = self.andWord
         self.word.setText(self.newtext)
-        self.timer.singleShot(self.conversionfactor * len(self.newtext) * 2.5,self.changeword)
+        self.delay(self.conversionfactor,len(self.newtext),self.changeword, self.minimum + 100)
         if self.reverse:
             self.number -= 1
         else:
             self.number += 1
+            
+    def delay(self, conversion, length, function,minimum):
+        if length > 5:
+            self.timer.singleShot(conversion * length, function)
+        else:
+            self.timer.singleShot(minimum, function)
         
     def pause(self):
         self.paused = True
@@ -248,7 +258,7 @@ class Example(QtGui.QWidget):
             self.wpm = int(wpm)            
         except ValueError:
             print("Invalid wpm. Must be integer.")
-            self.wpm = 400
+            self.wpm = 500
         QtGui.qApp.emit(QtCore.SIGNAL("lengthChanged"),self.textLength,self.wpm)
         print("Wpm changed to {0}".format(self.wpm))
         
