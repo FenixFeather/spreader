@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+import ConfigParser
 from PyQt4 import QtGui, QtCore
 import time
 
@@ -9,16 +10,18 @@ class Spreader(QtGui.QMainWindow):
         QtCore.QObject.connect(QtGui.qApp, QtCore.SIGNAL('lengthChanged'), self.updateStatus)
         
         self.initUI()
+        self.initConfig()
         
     def initUI(self):
     
         #Central Widget
-        spreading = Example()
-        self.setCentralWidget(spreading)
+        self.spreading = Example()
+        self.setCentralWidget(self.spreading)
+        
         
         #Status Bar Stuff
         self.statusBar()
-        self.count = QtGui.QLabel("Spreading {0} words at {1} WPM".format(spreading.textLength, spreading.wpm))
+        self.count = QtGui.QLabel("Spreading {0} words at {1} WPM".format(self.spreading.textLength, self.spreading.wpm))
         self.statusBar().addPermanentWidget(self.count)
         
         #Actions
@@ -30,32 +33,32 @@ class Spreader(QtGui.QMainWindow):
         startAction = QtGui.QAction(QtGui.QIcon('img/media-playback-start.png'), 'Start', self)
         startAction.setShortcut('F5')
         startAction.setStatusTip('Start (F5)')
-        startAction.triggered.connect(spreading.play)
+        startAction.triggered.connect(self.spreading.play)
         
         stopAction = QtGui.QAction(QtGui.QIcon('img/media-playback-stop.png'), 'Stop', self)
         stopAction.setShortcut('F6')
         stopAction.setStatusTip('Stop (F6)')
-        stopAction.triggered.connect(spreading.stop)
+        stopAction.triggered.connect(self.spreading.stop)
         
         pauseAction = QtGui.QAction(QtGui.QIcon('img/media-playback-pause.png'), 'Pause', self)
         pauseAction.setShortcut('F7')
         pauseAction.setStatusTip('Pause (F7)')
-        pauseAction.triggered.connect(spreading.pause)
+        pauseAction.triggered.connect(self.spreading.pause)
         
         increaseAction = QtGui.QAction(QtGui.QIcon('img/media-seek-forward.png'), 'Increase Speed', self)
         increaseAction.setShortcut('F9')
         increaseAction.setStatusTip('Increase Speed (F9)')
-        increaseAction.triggered.connect(spreading.changeSpeed)
+        increaseAction.triggered.connect(self.spreading.changeSpeed)
         
         decreaseAction = QtGui.QAction(QtGui.QIcon('img/media-seek-backward.png'), 'Decrease Speed', self)
         decreaseAction.setShortcut('F8')
         decreaseAction.setStatusTip('Decrease Speed (F8)')
-        decreaseAction.triggered.connect(spreading.changeSpeed)
+        decreaseAction.triggered.connect(self.spreading.changeSpeed)
         
         settingsAction = QtGui.QAction(QtGui.QIcon('img/preferences.png'), 'Preferences', self)
         settingsAction.setShortcut('F12')
         settingsAction.setStatusTip('Preferences (F12)')
-        settingsAction.triggered.connect(spreading.settings)
+        settingsAction.triggered.connect(self.spreading.settings)
         
         #Menu bar
         menubar = self.menuBar()
@@ -81,6 +84,46 @@ class Spreader(QtGui.QMainWindow):
         self.setWindowTitle('Spreader')    
         self.show()
         
+    def initConfig(self):
+        Config = ConfigParser.ConfigParser()
+        try:
+            cfgfile = open("settings.ini",'r')
+            Config.readfp(cfgfile)
+            Config.sections()
+            self.spreading.increment = Config.getint('Settings', 'Increment')
+            self.spreading.wpm = Config.getint('Settings', 'WPM')
+            self.spreading.reverse = Config.getboolean('Settings', 'Reverse')
+            self.spreading.andDrill = Config.getboolean('Settings', 'InsertWord')
+            self.spreading.andWord = Config.get('Settings', 'WordToInsert')
+            self.spreading.defaultText = Config.get('Settings', 'DefaultText')
+            self.spreading.textEdit.setText(self.spreading.defaultText)
+        except:
+            print('Error reading settings.ini, reverting to default.')
+            try:
+                if cfgfile:
+                    cfgfile.close()
+            except:
+                pass
+            cfgfile = open("settings.ini",'w')
+#            self.increment = 10
+#            self.wpm = 500
+#            self.reverse = False
+#            self.andDrill = False
+#            self.andWord = 'and'
+            self.writeIni(cfgfile)
+            cfgfile.close()
+            
+    def writeIni(self,f):
+        Config = ConfigParser.ConfigParser()
+        Config.add_section('Settings')
+        Config.set('Settings','Increment',self.spreading.increment)
+        Config.set('Settings','WPM',self.spreading.wpm)
+        Config.set('Settings','Reverse',self.spreading.reverse)
+        Config.set('Settings','InsertWord',self.spreading.andDrill)   
+        Config.set('Settings','WordToInsert',self.spreading.andWord)
+        Config.set('Settings','DefaultText',self.spreading.defaultText) 
+        Config.write(f)        
+        
     def center(self):
         qr = self.frameGeometry()
         cp = QtGui.QDesktopWidget().availableGeometry().center()
@@ -89,6 +132,14 @@ class Spreader(QtGui.QMainWindow):
         
     def updateStatus(self,length,wpm):
         self.count.setText("Spreading {0} words at {1} WPM".format(length,wpm))
+        
+    def closeEvent(self,event):
+        f = open('settings.ini','w')
+        self.writeIni(f)
+        f.close()
+#        for item in self.savedSettings.keys():
+#            print("{0}={1}".format(item,self.savedSettings[item]))
+#        super(Spreader, self).close()
 
 class Example(QtGui.QWidget):
     
@@ -111,7 +162,8 @@ class Example(QtGui.QWidget):
         
         #Widgets
         self.textEdit = QtGui.QTextEdit()
-        self.textEdit.setText('From the longer view offered by a historical-materialist critique of capitalism, the direction that would be taken by U.S. imperialism following the fall of the Soviet Union was never in doubt. Capitalism by its very logic is a globally expansive system. The contradiction between its transnational economic aspirations and the fact that politically it remains rooted in particular nation states is insurmountable for the system. Yet, ill-fated attempts by individual states to overcome this contradiction are just as much a part of its fundamental logic. In present world circumstances, when one capitalist state has a virtual monopoly of the means of destruction, the temptation for that state to attempt to seize full-spectrum dominance and to transform itself into the de facto global state governing the world economy is irresistible.')
+        self.defaultText = 'From the longer view offered by a historical-materialist critique of capitalism, the direction that would be taken by U.S. imperialism following the fall of the Soviet Union was never in doubt. Capitalism by its very logic is a globally expansive system. The contradiction between its transnational economic aspirations and the fact that politically it remains rooted in particular nation states is insurmountable for the system. Yet, ill-fated attempts by individual states to overcome this contradiction are just as much a part of its fundamental logic. In present world circumstances, when one capitalist state has a virtual monopoly of the means of destruction, the temptation for that state to attempt to seize full-spectrum dominance and to transform itself into the de facto global state governing the world economy is irresistible.'
+        self.textEdit.setText(self.defaultText)
         self.text = unicode(self.textEdit.toPlainText()).split()
         self.textLength = len(self.text)
         QtCore.QObject.connect(self.textEdit, QtCore.SIGNAL('textChanged()'), self.lengthChanged)
@@ -137,6 +189,8 @@ class Example(QtGui.QWidget):
         self.number = 0
         self.paused = True
         self.playing = False
+        
+        #Config
         self.increment = 10
         self.wpm = 500
         self.reverse = False
@@ -193,12 +247,9 @@ class Example(QtGui.QWidget):
     def changeTime(self):
 #        if self.andDrill and (self.number % 2) == 0:
         if self.andDrill:
-#            self.timer.singleShot(self.conversionfactor * len(self.newtext),self.displayAnd)
             self.delay(self.conversionfactor,len(self.newtext),self.displayAnd, self.minimum)
         else:
             self.delay(self.conversionfactor,len(self.newtext),self.changeword, self.minimum)
-#            self.timer.singleShot(self.conversionfactor * len(self.newtext),self.changeword)
-#            print("Displaying {0} for {1} ms".format(self.newtext, self.conversionfactor * len(self.newtext)))
             if self.reverse:
                 self.number -= 1
             else:
@@ -226,6 +277,7 @@ class Example(QtGui.QWidget):
     def stop(self):
         self.paused = True
         self.playing = False
+        self.text = unicode(self.textEdit.toPlainText()).split()
         self.number = 0
         self.word.setText(self.text[self.number])
         self.slider.setSliderPosition(self.number)
