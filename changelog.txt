@@ -1,0 +1,25 @@
+Changelog
+=========
+
+0.9.5
+=====
+-Added support for using a settings.ini file for adjusting the program.
+-Fixed a bug involving a misbinded keyboard shortcut.
+
+0.9.0
+=====
+-Rebalanced the method the program uses to calculate the time to display a word: words five letters or less will always be a certain minimum length of time, while longer words will be displayed for a longer amount of time.
+
+0.8
+===
+-Two new speed drills:
+    --Read backwards
+    --Insert word
+    
+0.6
+===
+-Added support for quickly changing WPM on the fly
+
+0.5
+===
+-First usable release

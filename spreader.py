@@ -26,7 +26,7 @@ class Spreader(QtGui.QMainWindow):
         
         #Actions
         exitAction = QtGui.QAction(QtGui.QIcon('img/application-exit.png'), 'Exit', self)
-        exitAction.setShortcut('lCtrl+Q')
+        exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(self.close)
         
@@ -60,9 +60,15 @@ class Spreader(QtGui.QMainWindow):
         settingsAction.setStatusTip('Preferences (F12)')
         settingsAction.triggered.connect(self.spreading.settings)
         
+        openAction = QtGui.QAction(QtGui.QIcon('img/document-open.png'), 'Open', self)
+        openAction.setShortcut('Ctrl+O')
+        openAction.setStatusTip('Open new File')
+#        openAction.triggered.connect(self.showDialog)
+        
         #Menu bar
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
+        fileMenu.addAction(openAction) 
         fileMenu.addAction(settingsAction)
         fileMenu.addAction(exitAction)
         
@@ -73,6 +79,7 @@ class Spreader(QtGui.QMainWindow):
         self.toolbar.addAction(stopAction)
         self.toolbar.addAction(decreaseAction)
         self.toolbar.addAction(increaseAction)
+        self.toolbar.addAction(openAction)
         self.toolbar.addAction(settingsAction)
         self.toolbar.addAction(exitAction)
         
@@ -220,7 +227,10 @@ class Example(QtGui.QWidget):
             self.text = unicode(self.textEdit.toPlainText()).split()
             self.timer = QtCore.QTimer()
             self.timer.timeout.connect(self.changeword)
-            self.newtext = self.text[self.number]
+            try:
+                self.newtext = self.text[self.number]
+            except IndexError:
+                pass
             self.conversionfactor = 12000/self.wpm
             self.paused = False
             self.playing = True
@@ -279,7 +289,10 @@ class Example(QtGui.QWidget):
         self.playing = False
         self.text = unicode(self.textEdit.toPlainText()).split()
         self.number = 0
-        self.word.setText(self.text[self.number])
+        try:
+            self.word.setText(self.text[self.number])
+        except IndexError:
+            pass
         self.slider.setSliderPosition(self.number)
         self.textEdit.setReadOnly(False)
         print('stop')
