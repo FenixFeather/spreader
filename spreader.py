@@ -3,6 +3,7 @@ import sys
 import ConfigParser
 from PyQt4 import QtGui, QtCore
 import time
+import os
 
 class Spreader(QtGui.QMainWindow):
     def __init__(self):
@@ -62,13 +63,19 @@ class Spreader(QtGui.QMainWindow):
         
         openAction = QtGui.QAction(QtGui.QIcon('img/document-open.png'), 'Open', self)
         openAction.setShortcut('Ctrl+O')
-        openAction.setStatusTip('Open new File')
-#        openAction.triggered.connect(self.showDialog)
+        openAction.setStatusTip('Open new file')
+        openAction.triggered.connect(self.spreading.showOpen)
+        
+        saveAction = QtGui.QAction(QtGui.QIcon('img/document-save-as.png'), 'Save As', self)
+        saveAction.setShortcut('Ctrl+S')
+        saveAction.setStatusTip('Save new file')
+        saveAction.triggered.connect(self.spreading.showSave)
         
         #Menu bar
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
-        fileMenu.addAction(openAction) 
+        fileMenu.addAction(openAction)
+        fileMenu.addAction(saveAction) 
         fileMenu.addAction(settingsAction)
         fileMenu.addAction(exitAction)
         
@@ -80,6 +87,7 @@ class Spreader(QtGui.QMainWindow):
         self.toolbar.addAction(decreaseAction)
         self.toolbar.addAction(increaseAction)
         self.toolbar.addAction(openAction)
+        self.toolbar.addAction(saveAction)
         self.toolbar.addAction(settingsAction)
         self.toolbar.addAction(exitAction)
         
@@ -349,6 +357,29 @@ class Example(QtGui.QWidget):
             
     def changeAndWord(self, word):
         self.andWord = word
+        
+    def showOpen(self):
+        if not self.playing:
+            fname = QtGui.QFileDialog.getOpenFileName(self, "Open a file", os.getcwd(), "Plain text files (*.txt)")
+            print(fname)
+            try:
+                f = open(fname, 'r')
+                with f:        
+                    data = f.read()
+                    self.textEdit.setText(data)
+            except IOError:
+                pass
+                
+    def showSave(self):
+        if not self.playing:
+            fname = QtGui.QFileDialog.getSaveFileName(self, "Save a file", os.getcwd(), "Plain text files (*.txt)")
+            print(fname)
+            try:
+                f = open(fname + '.txt', 'w')
+                with f:        
+                    f.write(str(self.textEdit.toPlainText()))
+            except IOError:
+                pass   
 
 class Settings(QtGui.QDialog):
     def __init__(self,parent=None,wpm=500,increment=10,reverse=False,andDrill=False,andWord='and'):

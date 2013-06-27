@@ -1,5 +1,9 @@
 Changelog
 =========
+0.9.7
+=====
+-Added save/open dialogs
+-Fixed exit application icon being a lower resolution than all the other icons.
 
 0.9.5
 =====
@@ -23,3 +27,5 @@ Changelog
 0.5
 ===
 -First usable release
+-Settings dialog to control WPM
+-Larger Window Size
