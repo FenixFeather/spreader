@@ -4,6 +4,7 @@ import ConfigParser
 from PyQt4 import QtGui, QtCore
 import time
 import os
+import sys
 
 class Spreader(QtGui.QMainWindow):
     def __init__(self):
@@ -460,6 +461,8 @@ class Settings(QtGui.QDialog):
 
         
 def main():
+#    sys.stdout = open('logs/my_stdout.log', 'w')
+    sys.stderr = open('logs/errors.log', 'w')
     app = QtGui.QApplication(sys.argv)
     ex = Spreader()
     sys.exit(app.exec_())
