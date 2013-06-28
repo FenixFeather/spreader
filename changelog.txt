@@ -1,5 +1,11 @@
 Changelog
 =========
+
+1.0.0
+=====
+-Redirected stderr to a log file
+-Created installation executable for the program.
+
 0.9.7
 =====
 -Added save/open dialogs
