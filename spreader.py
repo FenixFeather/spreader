@@ -72,6 +72,10 @@ class Spreader(QtGui.QMainWindow):
         saveAction.setStatusTip('Save new file')
         saveAction.triggered.connect(self.spreading.showSave)
         
+        helpAction = QtGui.QAction(QtGui.QIcon('img/help-about.png'), 'About', self)
+        helpAction.setStatusTip('About')
+        helpAction.triggered.connect(self.spreading.showHelp)
+        
         #Menu bar
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
@@ -79,6 +83,8 @@ class Spreader(QtGui.QMainWindow):
         fileMenu.addAction(saveAction) 
         fileMenu.addAction(settingsAction)
         fileMenu.addAction(exitAction)
+        helpMenu = menubar.addMenu('&Help')
+        helpMenu.addAction(helpAction)
         
         #Toolbar
         self.toolbar = self.addToolBar('Tools')
@@ -380,7 +386,11 @@ class Example(QtGui.QWidget):
                 with f:        
                     f.write(str(self.textEdit.toPlainText()))
             except IOError:
-                pass   
+                pass
+    
+    def showHelp(self):
+        helpBox = QtGui.QMessageBox()
+        helpBox.about(self, "About Spreader", "\n                 Spreader\nVersion: 1.0.0 by Thomas Liu")
 
 class Settings(QtGui.QDialog):
     def __init__(self,parent=None,wpm=500,increment=10,reverse=False,andDrill=False,andWord='and'):
